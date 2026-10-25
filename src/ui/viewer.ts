@@ -1,3 +1,5 @@
+import type { DecodedFrame } from '../video/types';
+
 /** Space kept below the viewer for the controls, so the frame and the controls fit on one screen. */
 const RESERVED_HEIGHT = 340;
 const MIN_HEIGHT = 240;
@@ -39,8 +41,13 @@ export class Viewer {
     this.layout();
   }
 
-  draw(image: CanvasImageSource): void {
-    this.ctx.drawImage(image, 0, 0, this.videoWidth, this.videoHeight);
+  /** Shows a small spinner (after a short delay) while a frame is being decoded. */
+  setLoading(loading: boolean): void {
+    this.box.classList.toggle('is-loading', loading);
+  }
+
+  draw(frame: DecodedFrame): void {
+    frame.draw(this.ctx);
   }
 
   layout(): void {

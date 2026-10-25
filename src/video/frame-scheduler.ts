@@ -15,6 +15,10 @@ export class FrameScheduler {
     return this.running;
   }
 
+  get busy(): boolean {
+    return this.running !== null;
+  }
+
   /** Resolves when no frame is loading or waiting. */
   idle(): Promise<void> {
     return this.running ?? Promise.resolve();

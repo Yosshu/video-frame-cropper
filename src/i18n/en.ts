@@ -25,6 +25,13 @@ export const en: Record<MessageKey, string> = {
 
   'meta.frames': '{count} frames',
 
+  'nav.prev': 'Previous frame (←)',
+  'nav.next': 'Next frame (→)',
+  'nav.slider': 'Frame position',
+  'nav.frame': 'Frame',
+  'nav.frameTooltip': 'Frame number (counted from 0). Type a number and press Enter to jump.',
+  'nav.time': 'Time from the start',
+
   'alert.close': 'Close',
   'error.open.unsupported-format': 'Could not open the video. This file format is not supported.',
   'error.open.no-video-track': 'Could not open the video. This file contains no video track.',

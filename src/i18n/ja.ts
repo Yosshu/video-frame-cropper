@@ -25,6 +25,13 @@ export const ja = {
 
   'meta.frames': '{count} フレーム',
 
+  'nav.prev': '前のフレーム（←）',
+  'nav.next': '次のフレーム（→）',
+  'nav.slider': 'フレーム位置',
+  'nav.frame': 'フレーム',
+  'nav.frameTooltip': 'フレーム番号（0 から数えます）。入力して Enter で移動します。',
+  'nav.time': '先頭からの時間',
+
   'alert.close': '閉じる',
   'error.open.unsupported-format': '動画を開けませんでした。このファイル形式には対応していません。',
   'error.open.no-video-track': '動画を開けませんでした。このファイルには映像が含まれていません。',

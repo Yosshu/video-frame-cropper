@@ -1,6 +1,7 @@
 import { formatFps, formatTime } from './format';
 import { localize } from './i18n';
 import { AlertBanner, BusyOverlay } from './ui/overlays';
+import type { Timeline } from './ui/timeline';
 import { Viewer } from './ui/viewer';
 import { FrameScheduler } from './video/frame-scheduler';
 import { openVideo } from './video/open';
@@ -11,6 +12,7 @@ export interface AppElements {
   workspace: HTMLElement;
   meta: HTMLElement;
   viewer: Viewer;
+  timeline: Timeline;
   alert: AlertBanner;
   busy: BusyOverlay;
 }
@@ -19,8 +21,34 @@ export class App {
   private source: FrameSource | null = null;
   private loading: AbortController | null = null;
   private readonly scheduler = new FrameScheduler((index) => this.loadFrame(index));
+  /** The frame the user asked for; the canvas shows it once it has been decoded. */
+  private index = 0;
 
   constructor(private readonly ui: AppElements) {}
+
+  get hasVideo(): boolean {
+    return this.source !== null;
+  }
+
+  get lastIndex(): number {
+    return this.source ? this.source.info.frameCount - 1 : 0;
+  }
+
+  goTo(index: number): void {
+    const source = this.source;
+    if (!source) return;
+    const clamped = Math.min(Math.max(Math.round(index), 0), this.lastIndex);
+    this.index = clamped;
+    this.ui.timeline.setPosition(clamped, source.timeOf(clamped), this.lastIndex);
+    this.ui.viewer.setLoading(true);
+    void this.scheduler.request(clamped).then(() => {
+      if (!this.scheduler.busy) this.ui.viewer.setLoading(false);
+    });
+  }
+
+  step(delta: number): void {
+    this.goTo(this.index + delta);
+  }
 
   async open(file: File): Promise<void> {
     this.loading?.abort();
@@ -44,7 +72,8 @@ export class App {
         return;
       }
       this.setSource(source);
-      await this.scheduler.request(0);
+      this.goTo(0);
+      await this.scheduler.idle();
     } catch (error) {
       if (!loading.signal.aborted) this.showOpenError(error);
     } finally {
@@ -61,6 +90,7 @@ export class App {
 
     const { info } = source;
     this.ui.viewer.setVideoSize(info.width, info.height);
+    this.ui.timeline.setFrameCount(info.frameCount);
     this.renderMeta(source);
     this.ui.dropzone.hidden = true;
     this.ui.workspace.hidden = false;
@@ -71,9 +101,12 @@ export class App {
     const source = this.source;
     if (!source) return;
     try {
-      const image = await source.getFrame(index);
-      if (source !== this.source) return;
-      this.ui.viewer.draw(image);
+      const frame = await source.getFrame(index);
+      try {
+        if (source === this.source) this.ui.viewer.draw(frame);
+      } finally {
+        frame.close();
+      }
     } catch (error) {
       if (source !== this.source) return;
       console.error(error);

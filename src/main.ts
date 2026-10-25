@@ -1,6 +1,7 @@
 import { App } from './app';
 import { getLang, initI18n, onLangChange, setLang, type Lang } from './i18n';
 import { AlertBanner, BusyOverlay } from './ui/overlays';
+import { Timeline } from './ui/timeline';
 import { Viewer } from './ui/viewer';
 
 function byId<T extends HTMLElement>(id: string): T {
@@ -62,19 +63,72 @@ function setupFileOpening(app: App): void {
   });
 }
 
+/** True for fields where arrow keys and letters edit text instead of triggering shortcuts. */
+function isTextEntry(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement) {
+    return true;
+  }
+  if (target instanceof HTMLInputElement) {
+    return !['range', 'button', 'checkbox', 'radio', 'submit', 'reset', 'file', 'color'].includes(target.type);
+  }
+  return false;
+}
+
+function setupShortcuts(app: App): void {
+  document.addEventListener('keydown', (event) => {
+    if (event.defaultPrevented || event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return;
+    if (isTextEntry(event.target) || !app.hasVideo) return;
+    switch (event.key) {
+      case 'ArrowLeft':
+        app.step(event.shiftKey ? -10 : -1);
+        break;
+      case 'ArrowRight':
+        app.step(event.shiftKey ? 10 : 1);
+        break;
+      case 'Home':
+        app.goTo(0);
+        break;
+      case 'End':
+        app.goTo(app.lastIndex);
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+  });
+}
+
 function main(): void {
   initI18n();
   setupLanguageSwitch();
 
-  const app = new App({
+  let app: App | null = null;
+  const timeline = new Timeline(
+    {
+      slider: byId('frame-slider'),
+      input: byId('frame-input'),
+      total: byId('frame-total'),
+      time: byId('frame-time'),
+      prev: byId('prev-frame'),
+      next: byId('next-frame'),
+    },
+    {
+      seek: (index) => app?.goTo(index),
+      step: (delta) => app?.step(delta),
+    },
+  );
+  app = new App({
     dropzone: byId('dropzone'),
     workspace: byId('workspace'),
     meta: byId('video-meta'),
     viewer: new Viewer(byId('viewer'), byId('frame-box'), byId<HTMLCanvasElement>('frame-canvas')),
+    timeline,
     alert: new AlertBanner(byId('alert'), byId('alert-text'), byId('alert-close')),
     busy: new BusyOverlay(byId('busy'), byId('busy-title'), byId('busy-detail')),
   });
   setupFileOpening(app);
+  setupShortcuts(app);
 
   document.documentElement.classList.remove('booting');
 }

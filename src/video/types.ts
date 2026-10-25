@@ -12,13 +12,19 @@ export interface VideoInfo {
   codec: string | null;
 }
 
-/** A decoded video that can produce any of its frames by number. */
+/** A decoded frame. It holds decoder memory until it is closed. */
+export interface DecodedFrame {
+  /** Draws the frame, in its display orientation, over the whole canvas of `ctx`. */
+  draw(ctx: CanvasRenderingContext2D): void;
+  close(): void;
+}
+
+/** A video that can decode any of its frames by number. */
 export interface FrameSource {
   readonly info: VideoInfo;
   /** Seconds from the first frame to the start of frame `index`. */
   timeOf(index: number): number;
-  /** Decodes frame `index` as an image of `info.width` × `info.height` pixels. */
-  getFrame(index: number): Promise<CanvasImageSource>;
+  getFrame(index: number): Promise<DecodedFrame>;
   dispose(): void;
 }
 
