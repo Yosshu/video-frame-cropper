@@ -72,6 +72,8 @@ export const ja = {
   'help.formatsText':
     'MP4・MOV・WebM・MKV・TS（H.264・H.265/HEVC・VP8・VP9・AV1）。どの圧縮形式を読めるかは、お使いのブラウザによって異なります。',
   'help.privacy': '動画はどこにもアップロードされません。読み込みも切り抜きも、すべてお使いのブラウザの中で行われます。',
+  'meta.variableFps': '平均 {fps} fps（可変フレームレート）',
+  'drop.titleTouch': '動画を選んでください',
 
   'alert.close': '閉じる',
   'error.open.unsupported-format': '動画を開けませんでした。このファイル形式には対応していません。',

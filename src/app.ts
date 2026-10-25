@@ -210,7 +210,11 @@ export class App {
       return item;
     };
     addItem(`${info.width}×${info.height}`);
-    if (info.fps !== null) addItem(`${formatFps(info.fps)} fps`);
+    if (info.fps !== null) {
+      const fps = formatFps(info.fps);
+      if (info.variableFrameRate) localize(addItem(), 'meta.variableFps', { fps });
+      else addItem(`${fps} fps`);
+    }
     localize(addItem(), 'meta.frames', { count: info.frameCount });
     addItem(formatTime(info.duration));
     if (info.codec) addItem(info.codec);

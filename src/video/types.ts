@@ -6,6 +6,8 @@ export interface VideoInfo {
   frameCount: number;
   /** Average frames per second, or null when unknown. */
   fps: number | null;
+  /** True for variable frame rate videos, where `fps` is only an average. */
+  variableFrameRate: boolean;
   /** Seconds. */
   duration: number;
   /** Human-readable codec name such as "H.264", or null when unknown. */

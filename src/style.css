@@ -280,6 +280,22 @@ body {
   font-size: 0.9rem;
 }
 
+/* Touch screens cannot drop files, so they get a simpler prompt. */
+.dropzone-title-touch {
+  display: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .dropzone-title,
+  .dropzone-or {
+    display: none;
+  }
+
+  .dropzone-title.dropzone-title-touch {
+    display: block;
+  }
+}
+
 /* ---------- Footer ---------- */
 
 .app-footer {

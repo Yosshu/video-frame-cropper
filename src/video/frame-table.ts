@@ -41,6 +41,18 @@ export class FrameTable {
     return this.at(index);
   }
 
+  /** The last frame starting at or before `time` (0 if `time` is before the first frame). */
+  indexAtOrBefore(time: number): number {
+    let low = 0;
+    let high = this.count - 1;
+    while (low < high) {
+      const mid = Math.ceil((low + high) / 2);
+      if (this.at(mid) <= time) low = mid;
+      else high = mid - 1;
+    }
+    return low;
+  }
+
   /** Seconds from the first frame, for display. */
   relativeTime(index: number): number {
     return this.at(index) - this.at(0);
@@ -68,6 +80,20 @@ export class FrameTable {
     if (this.count < 2) return null;
     const span = this.at(this.count - 1) - this.at(0);
     return span > 0 ? (this.count - 1) / span : null;
+  }
+
+  /**
+   * True when the gaps between frames differ noticeably (phones often record like this). Timestamp
+   * rounding in the container (e.g. whole milliseconds) does not count.
+   */
+  get isVariableRate(): boolean {
+    if (this.count < 3) return false;
+    const gaps: number[] = [];
+    for (let i = 1; i < this.count; i++) gaps.push(this.at(i) - this.at(i - 1));
+    gaps.sort((a, b) => a - b);
+    const median = gaps[Math.floor(gaps.length / 2)]!;
+    const spread = gaps[gaps.length - 1]! - gaps[0]!;
+    return spread > Math.max(0.15 * median, 0.002);
   }
 
   private at(index: number): number {

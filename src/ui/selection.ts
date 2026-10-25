@@ -142,10 +142,10 @@ export class SelectionPanel {
     private readonly handlers: SelectionPanelHandlers,
   ) {
     for (const input of els.inputs) {
-      input.addEventListener('change', () => this.applyInputs());
+      input.addEventListener('change', () => this.applyInputs(false));
       input.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
-          this.applyInputs();
+          this.applyInputs(true);
           event.preventDefault();
         } else if (event.key === 'Escape') {
           this.render(this.current);
@@ -179,13 +179,18 @@ export class SelectionPanel {
     this.els.clear.disabled = rect === null;
   }
 
-  private applyInputs(): void {
+  /**
+   * Leaving a field applies the numbers only when they already describe a region, so typing a new
+   * region one field at a time never swaps half-entered values. Enter applies them in any order and
+   * flags numbers that cannot work.
+   */
+  private applyInputs(explicit: boolean): void {
     const raw = this.els.inputs.map((input) => input.value.trim());
-    // Wait until all four numbers are filled in.
-    if (raw.some((value) => value === '')) return;
-    const numbers = raw.map(Number);
-    const valid = numbers.every(Number.isFinite) && this.handlers.apply(numbers[0]!, numbers[1]!, numbers[2]!, numbers[3]!);
-    if (!valid) {
+    if (!explicit && raw.some((value) => value === '')) return;
+    const [x1, y1, x2, y2] = raw.map((value) => (value === '' ? NaN : Number(value))) as [number, number, number, number];
+    const complete = [x1, y1, x2, y2].every(Number.isFinite);
+    if (!explicit && !(complete && x1 < x2 && y1 < y2)) return;
+    if (!(complete && this.handlers.apply(x1, y1, x2, y2))) {
       for (const input of this.els.inputs) input.setAttribute('aria-invalid', 'true');
     }
   }

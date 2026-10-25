@@ -72,6 +72,8 @@ export const en: Record<MessageKey, string> = {
   'help.formatsText':
     'MP4, MOV, WebM, MKV and TS (H.264, H.265/HEVC, VP8, VP9, AV1). Which codecs can be read depends on your browser.',
   'help.privacy': 'Your video is never uploaded. Opening and cropping both happen entirely in your browser.',
+  'meta.variableFps': '{fps} fps on average (variable frame rate)',
+  'drop.titleTouch': 'Choose a video',
 
   'alert.close': 'Close',
   'error.open.unsupported-format': 'Could not open the video. This file format is not supported.',

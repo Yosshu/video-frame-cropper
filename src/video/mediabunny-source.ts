@@ -25,6 +25,13 @@ const CODEC_NAMES: Record<VideoCodec, string> = {
 
 /** Decoded timestamps are rounded to microseconds, so frames are matched with a small tolerance. */
 const TIMESTAMP_TOLERANCE = 5e-4;
+/** Limits for the full-resolution frames kept for stepping backwards. */
+const KEEP_MAX_BYTES = 256 * 1024 * 1024;
+const KEEP_MAX_FRAMES = 60;
+/** Extra time a step back may spend keeping frames for the following steps. */
+const KEEP_TIME_BUDGET_MS = 300;
+/** Below this cost per frame, every shown frame is kept too, so stepping back and forth is instant. */
+const KEEP_SHOWN_MAX_MS = 6;
 
 interface FrameStream {
   iterator: AsyncGenerator<VideoSample, void, unknown>;
@@ -39,6 +46,16 @@ class MediabunnySource implements FrameSource {
    * previous key frame, which keeps frame-by-frame stepping fast in videos with long GOPs.
    */
   private stream: FrameStream | null = null;
+  /**
+   * Decoders can only run forwards, so every step back decodes again from the previous key frame.
+   * When that happens, the frames just before the target are kept here so the next steps back
+   * are instant.
+   */
+  private readonly kept = new Map<number, ImageBitmap>();
+  private snapshotCanvas: OffscreenCanvas | null = null;
+  /** Measured milliseconds to keep one frame (fast with a GPU, slow with software rendering). */
+  private keepCost = 2;
+  private lastIndex = -1;
 
   constructor(
     readonly info: VideoInfo,
@@ -53,14 +70,30 @@ class MediabunnySource implements FrameSource {
   }
 
   async getFrame(index: number): Promise<DecodedFrame> {
+    const steppingBack = index === this.lastIndex - 1;
+    this.lastIndex = index;
+
+    const kept = this.kept.get(index);
+    if (kept) return wrapBitmap(kept);
+
+    const keepShown = this.keepCost <= KEEP_SHOWN_MAX_MS ? index : Infinity;
     if (this.stream && (await this.canContinue(this.stream, index))) {
-      const sample = await this.advance(this.stream, index);
+      const sample = await this.advance(this.stream, index, keepShown);
       if (sample) return wrapSample(sample);
     }
     await this.closeStream();
-    const stream: FrameStream = { iterator: this.sink.samples(this.table.queryTime(index)), nextIndex: index };
+    let start = index;
+    let keepFrom = keepShown;
+    if (steppingBack) {
+      const affordable = Math.floor(KEEP_TIME_BUDGET_MS / this.keepCost);
+      const count = Math.max(1, Math.min(this.keepCapacity(), affordable));
+      // Frames before the key frame need an earlier key frame, so keeping stops there.
+      start = keepFrom = Math.max(await this.keyFrameIndex(index), index - count + 1);
+    }
+    // The decoder starts at the key frame either way; frames before `start` never reach us.
+    const stream: FrameStream = { iterator: this.sink.samples(this.table.queryTime(start)), nextIndex: start };
     this.stream = stream;
-    const sample = await this.advance(stream, index);
+    const sample = await this.advance(stream, index, keepFrom);
     if (sample) return wrapSample(sample);
 
     // The stream did not line up with the frame table; fall back to a one-off decode.
@@ -72,6 +105,8 @@ class MediabunnySource implements FrameSource {
 
   dispose(): void {
     this.stream = null;
+    for (const bitmap of this.kept.values()) bitmap.close();
+    this.kept.clear();
     this.input.dispose();
   }
 
@@ -83,13 +118,23 @@ class MediabunnySource implements FrameSource {
     return !key || key.timestamp < this.table.timestamp(stream.nextIndex) + TIMESTAMP_TOLERANCE;
   }
 
-  /** Reads the stream up to frame `index`; returns null if the stream ends or skips past it. */
-  private async advance(stream: FrameStream, index: number): Promise<VideoSample | null> {
+  /**
+   * Reads the stream up to frame `index`; returns null if the stream ends or skips past it.
+   * Frames from `keepFrom` on (including the target) are kept for stepping backwards.
+   */
+  private async advance(stream: FrameStream, index: number, keepFrom = Infinity): Promise<VideoSample | null> {
     const target = this.table.timestamp(index);
     for (;;) {
       const result = await stream.iterator.next();
       if (result.done) return null;
       const sample = result.value;
+      const expected = stream.nextIndex;
+      const aligned =
+        expected < this.table.count &&
+        Math.abs(sample.timestamp - this.table.timestamp(expected)) <= TIMESTAMP_TOLERANCE;
+      if (aligned) stream.nextIndex = expected + 1;
+      if (aligned && expected >= keepFrom) this.keep(expected, sample);
+
       if (sample.timestamp < target - TIMESTAMP_TOLERANCE) {
         sample.close();
         continue;
@@ -100,6 +145,39 @@ class MediabunnySource implements FrameSource {
       }
       stream.nextIndex = index + 1;
       return sample;
+    }
+  }
+
+  private async keyFrameIndex(index: number): Promise<number> {
+    const key = await this.packets.getKeyPacket(this.table.queryTime(index), { metadataOnly: true });
+    return key ? Math.min(index, this.table.indexAtOrBefore(key.timestamp + TIMESTAMP_TOLERANCE)) : 0;
+  }
+
+  private keepCapacity(): number {
+    const frameBytes = this.info.width * this.info.height * 4;
+    return Math.max(1, Math.min(KEEP_MAX_FRAMES, Math.floor(KEEP_MAX_BYTES / frameBytes)));
+  }
+
+  /** Copies a decoded frame (orientation applied) into a bitmap that outlives the decoder's frame. */
+  private keep(index: number, sample: VideoSample): void {
+    if (typeof OffscreenCanvas === 'undefined' || this.kept.has(index)) return;
+    const started = performance.now();
+    this.snapshotCanvas ??= new OffscreenCanvas(this.info.width, this.info.height);
+    const ctx = this.snapshotCanvas.getContext('2d');
+    if (!ctx) return;
+    sample.drawWithFit(ctx, { fit: 'fill' });
+    this.kept.set(index, this.snapshotCanvas.transferToImageBitmap());
+    this.keepCost = 0.7 * this.keepCost + 0.3 * (performance.now() - started);
+
+    // Over the limit, drop the frames farthest from where the user is.
+    const capacity = this.keepCapacity();
+    while (this.kept.size > capacity) {
+      let farthest = index;
+      for (const key of this.kept.keys()) {
+        if (Math.abs(key - this.lastIndex) > Math.abs(farthest - this.lastIndex)) farthest = key;
+      }
+      this.kept.get(farthest)?.close();
+      this.kept.delete(farthest);
     }
   }
 
@@ -114,6 +192,14 @@ function wrapSample(sample: VideoSample): DecodedFrame {
   return {
     draw: (ctx) => sample.drawWithFit(ctx, { fit: 'fill' }),
     close: () => sample.close(),
+  };
+}
+
+/** A kept frame; the cache owns the bitmap, so closing the wrapper does nothing. */
+function wrapBitmap(bitmap: ImageBitmap): DecodedFrame {
+  return {
+    draw: (ctx) => ctx.drawImage(bitmap, 0, 0, ctx.canvas.width, ctx.canvas.height),
+    close: () => {},
   };
 }
 
@@ -156,6 +242,7 @@ export async function openWithMediabunny(
       height: await track.getDisplayHeight(),
       frameCount: table.count,
       fps: table.averageFrameRate,
+      variableFrameRate: table.isVariableRate,
       duration: table.duration,
       codec: codecName,
     };

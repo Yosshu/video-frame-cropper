@@ -54,6 +54,26 @@ describe('FrameTable', () => {
     expect(FrameTable.fromPackets(cfr(1, 30)).averageFrameRate).toBeNull();
   });
 
+  it('detects variable frame rates but not timestamp rounding', () => {
+    expect(FrameTable.fromPackets(cfr(100, 30)).isVariableRate).toBe(false);
+    const msRounded = Array.from({ length: 100 }, (_, i) => ({
+      timestamp: Math.round((i * 1000) / 29.97) / 1000,
+      duration: 0.033,
+    }));
+    expect(FrameTable.fromPackets(msRounded).isVariableRate).toBe(false);
+    const vfr = [...cfr(30, 30), ...cfr(30, 15, 1)];
+    expect(FrameTable.fromPackets(vfr).isVariableRate).toBe(true);
+  });
+
+  it('finds the frame shown at a given time', () => {
+    const table = FrameTable.fromPackets(cfr(10, 10));
+    expect(table.indexAtOrBefore(-1)).toBe(0);
+    expect(table.indexAtOrBefore(0)).toBe(0);
+    expect(table.indexAtOrBefore(0.35)).toBe(3);
+    expect(table.indexAtOrBefore(0.4)).toBe(4);
+    expect(table.indexAtOrBefore(99)).toBe(9);
+  });
+
   it('ignores duplicate timestamps', () => {
     const table = FrameTable.fromPackets([...cfr(2, 30), { timestamp: 1 / 30, duration: 1 / 30 }]);
     expect(table.count).toBe(2);
