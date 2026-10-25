@@ -38,3 +38,20 @@ export class BusyOverlay {
     this.root.hidden = true;
   }
 }
+
+/** A short confirmation at the bottom of the screen. */
+export class Toast {
+  private timer: number | undefined;
+
+  constructor(
+    private readonly root: HTMLElement,
+    private readonly text: HTMLElement,
+  ) {}
+
+  show(key: MessageKey, params?: MessageParams): void {
+    localize(this.text, key, params);
+    this.root.hidden = false;
+    window.clearTimeout(this.timer);
+    this.timer = window.setTimeout(() => (this.root.hidden = true), 3500);
+  }
+}

@@ -1,6 +1,7 @@
 import { App } from './app';
 import { getLang, initI18n, onLangChange, setLang, type Lang } from './i18n';
-import { AlertBanner, BusyOverlay } from './ui/overlays';
+import { AlertBanner, BusyOverlay, Toast } from './ui/overlays';
+import { SavePanel } from './ui/save-panel';
 import { SelectionOverlay, SelectionPanel } from './ui/selection';
 import { Timeline } from './ui/timeline';
 import { Viewer } from './ui/viewer';
@@ -23,11 +24,14 @@ function setupLanguageSwitch(): void {
   sync(getLang());
 }
 
+function chooseFile(): void {
+  byId<HTMLInputElement>('file-input').click();
+}
+
 function setupFileOpening(app: App): void {
   const fileInput = byId<HTMLInputElement>('file-input');
-  const choose = () => fileInput.click();
-  byId('open-button').addEventListener('click', choose);
-  byId('choose-button').addEventListener('click', choose);
+  byId('open-button').addEventListener('click', chooseFile);
+  byId('choose-button').addEventListener('click', chooseFile);
   fileInput.addEventListener('change', () => {
     const file = fileInput.files?.[0];
     fileInput.value = '';
@@ -76,10 +80,34 @@ function isTextEntry(target: EventTarget | null): boolean {
   return false;
 }
 
-function setupShortcuts(app: App): void {
+function setupHelp(): HTMLDialogElement {
+  const dialog = byId<HTMLDialogElement>('help-dialog');
+  byId('help-button').addEventListener('click', () => dialog.showModal());
+  byId('help-close').addEventListener('click', () => dialog.close());
+  // Clicks on the backdrop land on the dialog element itself.
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+  return dialog;
+}
+
+function setupShortcuts(app: App, help: HTMLDialogElement): void {
   document.addEventListener('keydown', (event) => {
     if (event.defaultPrevented || event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return;
-    if (isTextEntry(event.target) || !app.hasVideo) return;
+    if (isTextEntry(event.target) || help.open) return;
+    // Letter keys are matched by position too, so they also work while a Japanese IME is on.
+    const letter = event.code.startsWith('Key') ? event.code.slice(3).toLowerCase() : event.key.toLowerCase();
+    if (letter === 'o') {
+      chooseFile();
+      event.preventDefault();
+      return;
+    }
+    if (!app.hasVideo) return;
+    if (letter === 's' || letter === 't') {
+      if (!event.repeat) void app.save();
+      event.preventDefault();
+      return;
+    }
     switch (event.key) {
       case 'ArrowLeft':
         app.step(event.shiftKey ? -10 : -1);
@@ -143,11 +171,25 @@ function main(): void {
         clear: () => app?.setSelection(null),
       },
     ),
+    savePanel: new SavePanel(
+      {
+        format: byId('save-format'),
+        quality: byId('save-quality'),
+        qualityField: byId('save-quality-field'),
+        fileName: byId('save-name'),
+        save: byId('save-button'),
+      },
+      {
+        save: () => void app?.save(),
+        optionsChanged: () => app?.updateFileName(),
+      },
+    ),
     alert: new AlertBanner(byId('alert'), byId('alert-text'), byId('alert-close')),
     busy: new BusyOverlay(byId('busy'), byId('busy-title'), byId('busy-detail')),
+    toast: new Toast(byId('toast'), byId('toast-text')),
   });
   setupFileOpening(app);
-  setupShortcuts(app);
+  setupShortcuts(app, setupHelp());
 
   document.documentElement.classList.remove('booting');
 }

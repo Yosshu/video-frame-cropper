@@ -1,7 +1,9 @@
+import { downloadBlob, encodeCrop, outputFileName } from './export';
 import { fitRect, normalizeRect, type Rect } from './geometry';
 import { formatFps, formatTime } from './format';
 import { localize } from './i18n';
-import { AlertBanner, BusyOverlay } from './ui/overlays';
+import { AlertBanner, BusyOverlay, Toast } from './ui/overlays';
+import type { SavePanel } from './ui/save-panel';
 import type { SelectionOverlay, SelectionPanel } from './ui/selection';
 import type { Timeline } from './ui/timeline';
 import { Viewer } from './ui/viewer';
@@ -17,8 +19,10 @@ export interface AppElements {
   timeline: Timeline;
   selectionOverlay: SelectionOverlay;
   selectionPanel: SelectionPanel;
+  savePanel: SavePanel;
   alert: AlertBanner;
   busy: BusyOverlay;
+  toast: Toast;
 }
 
 export class App {
@@ -27,8 +31,11 @@ export class App {
   private readonly scheduler = new FrameScheduler((index) => this.loadFrame(index));
   /** The frame the user asked for; the canvas shows it once it has been decoded. */
   private index = 0;
+  /** The frame currently drawn on the canvas, or -1 while none is. */
+  private shownIndex = -1;
   /** Kept when moving between frames (and videos), so one region can be cut from many frames. */
   private selection: Rect | null = null;
+  private saving = false;
 
   constructor(private readonly ui: AppElements) {}
 
@@ -46,6 +53,7 @@ export class App {
     const clamped = Math.min(Math.max(Math.round(index), 0), this.lastIndex);
     this.index = clamped;
     this.ui.timeline.setPosition(clamped, source.timeOf(clamped), this.lastIndex);
+    this.updateFileName();
     this.ui.viewer.setLoading(true);
     void this.scheduler.request(clamped).then(() => {
       if (!this.scheduler.busy) this.ui.viewer.setLoading(false);
@@ -60,6 +68,48 @@ export class App {
     this.selection = rect;
     this.ui.selectionOverlay.render(rect);
     this.ui.selectionPanel.render(rect);
+    this.updateFileName();
+  }
+
+  /** Saves the selected region of the current frame (or the whole frame) as an image file. */
+  async save(): Promise<void> {
+    const source = this.source;
+    if (!source || this.saving) return;
+    this.saving = true;
+    this.ui.savePanel.setBusy(true);
+    try {
+      await this.scheduler.idle();
+      if (source !== this.source) return;
+      if (this.shownIndex !== this.index) {
+        this.ui.alert.show('error.frameNotReady');
+        return;
+      }
+      const { format, quality } = this.ui.savePanel;
+      const name = this.fileNameFor(source);
+      const blob = await encodeCrop(this.ui.viewer.canvas, this.selection, format, quality);
+      downloadBlob(blob, name);
+      this.ui.toast.show('toast.saved', { name });
+    } catch (error) {
+      console.error(error);
+      this.ui.alert.show('error.save', { detail: error instanceof Error ? error.message : String(error) });
+    } finally {
+      this.saving = false;
+      this.ui.savePanel.setBusy(false);
+    }
+  }
+
+  updateFileName(): void {
+    if (this.source) this.ui.savePanel.showFileName(this.fileNameFor(this.source));
+  }
+
+  private fileNameFor(source: FrameSource): string {
+    return outputFileName({
+      videoFileName: source.info.fileName,
+      index: this.index,
+      frameCount: source.info.frameCount,
+      rect: this.selection,
+      format: this.ui.savePanel.format,
+    });
   }
 
   /** Applies typed coordinates. Returns false if they leave no area inside the frame. */
@@ -107,6 +157,7 @@ export class App {
   private setSource(source: FrameSource): void {
     this.source?.dispose();
     this.source = source;
+    this.shownIndex = -1;
 
     const { info } = source;
     this.ui.viewer.setVideoSize(info.width, info.height);
@@ -126,7 +177,10 @@ export class App {
     try {
       const frame = await source.getFrame(index);
       try {
-        if (source === this.source) this.ui.viewer.draw(frame);
+        if (source === this.source) {
+          this.ui.viewer.draw(frame);
+          this.shownIndex = index;
+        }
       } finally {
         frame.close();
       }

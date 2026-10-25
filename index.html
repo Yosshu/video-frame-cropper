@@ -25,6 +25,10 @@
       </symbol>
       <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" /></symbol>
       <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24">
+        <path d="M12 3.5v11.5" /><path d="m7 10.5 5 5 5-5" /><path d="M4.5 20h15" />
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" /></symbol>
       <symbol id="i-help" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="9.5" /><path d="M9.6 9.2a2.5 2.5 0 0 1 4.9.6c0 1.7-2.5 2.2-2.5 3.9" /><path d="M12 17.2h.01" />
       </symbol>
@@ -144,6 +148,28 @@
           </div>
           <p class="sel-hint" id="sel-hint" data-i18n="sel.hint">画像の上をドラッグすると範囲を選択できます。</p>
         </div>
+
+        <div class="save-panel panel">
+          <div class="save-options">
+            <label class="field">
+              <span class="field-label" data-i18n="save.format">形式</span>
+              <select class="select" id="save-format">
+                <option value="jpeg">JPEG</option>
+                <option value="png">PNG</option>
+                <option value="webp">WebP</option>
+              </select>
+            </label>
+            <label class="field" id="save-quality-field" data-i18n-title="save.qualityTooltip">
+              <span class="field-label" data-i18n="save.quality">画質</span>
+              <input type="number" class="number-input quality-input" id="save-quality" min="1" max="100" step="1" inputmode="numeric" />
+            </label>
+          </div>
+          <p class="save-name" id="save-name"></p>
+          <button type="button" class="btn btn-primary btn-save" id="save-button" data-i18n-title="save.tooltip">
+            <svg class="icon" aria-hidden="true"><use href="#i-download" /></svg>
+            <span data-i18n="save.label">保存</span>
+          </button>
+        </div>
       </section>
 
       <input type="file" id="file-input" accept="video/*,.mp4,.m4v,.mov,.webm,.mkv,.ts,.avi,.wmv,.flv,.mpg,.mpeg" hidden />
@@ -157,6 +183,44 @@
         >
       </p>
     </footer>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden>
+      <svg class="icon" aria-hidden="true"><use href="#i-check" /></svg>
+      <span id="toast-text"></span>
+    </div>
+
+    <dialog class="help-dialog" id="help-dialog" aria-labelledby="help-title">
+      <div class="dialog-header">
+        <h2 id="help-title" data-i18n="help.title">使い方</h2>
+        <button type="button" class="alert-close" id="help-close" data-i18n-aria-label="alert.close" data-i18n-title="alert.close">
+          <svg class="icon" aria-hidden="true"><use href="#i-x" /></svg>
+        </button>
+      </div>
+      <ol class="help-steps">
+        <li data-i18n="help.step1"></li>
+        <li data-i18n="help.step2"></li>
+        <li data-i18n="help.step3"></li>
+        <li data-i18n="help.step4"></li>
+      </ol>
+      <p class="help-tip" data-i18n="help.tip"></p>
+      <h3 data-i18n="help.shortcuts">キーボードショートカット</h3>
+      <table class="shortcut-table">
+        <tbody>
+          <tr><td><kbd>S</kbd> / <kbd>T</kbd></td><td data-i18n="help.keySave"></td></tr>
+          <tr><td><kbd>O</kbd></td><td data-i18n="help.keyOpen"></td></tr>
+          <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td data-i18n="help.keyStep"></td></tr>
+          <tr><td><kbd>Shift</kbd> + <kbd>←</kbd> <kbd>→</kbd></td><td data-i18n="help.keyStep10"></td></tr>
+          <tr><td><kbd>Home</kbd> / <kbd>End</kbd></td><td data-i18n="help.keyEnds"></td></tr>
+          <tr><td><kbd>Esc</kbd></td><td data-i18n="help.keyClear"></td></tr>
+        </tbody>
+      </table>
+      <h3 data-i18n="help.fileNames">保存されるファイル名</h3>
+      <p data-i18n="help.fileNamesText"></p>
+      <p><code>運動会_f0120_x100_y50_x740_y530.jpg</code></p>
+      <h3 data-i18n="help.formats">対応している動画</h3>
+      <p data-i18n="help.formatsText"></p>
+      <p class="help-privacy" data-i18n="help.privacy"></p>
+    </dialog>
 
     <div class="busy" id="busy" hidden>
       <div class="busy-card" role="status" aria-live="polite">
