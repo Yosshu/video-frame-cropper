@@ -328,3 +328,181 @@ body {
     padding: 0;
   }
 }
+
+/* ---------- Alert ---------- */
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 10px 10px 10px 16px;
+  border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--danger) 10%, var(--surface));
+  color: var(--text);
+}
+
+.alert-text {
+  flex: 1;
+  margin: 0;
+  padding-top: 5px;
+}
+
+.alert-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.alert-close:hover {
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+}
+
+/* ---------- Workspace ---------- */
+
+.workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.video-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.meta-name {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--text);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta-item + .meta-item::before,
+.meta-name + .meta-item::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  margin-right: 14px;
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: middle;
+  opacity: 0.6;
+}
+
+.viewer {
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--stage-bg);
+}
+
+.frame-box {
+  position: relative;
+  flex: none;
+  max-width: 100%;
+}
+
+.frame-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #000;
+}
+
+.frame-canvas.pixelated {
+  image-rendering: pixelated;
+}
+
+/* ---------- Busy & drop overlays ---------- */
+
+.busy,
+.drop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgb(10 12 16 / 0.45);
+}
+
+.busy-card,
+.drop-overlay-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: min(420px, 100%);
+  padding: 28px 32px;
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 10px 40px rgb(0 0 0 / 0.25);
+  text-align: center;
+}
+
+.busy-title {
+  margin: 4px 0 0;
+  font-weight: 600;
+}
+
+.busy-detail {
+  max-width: 100%;
+  margin: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spinner {
+  width: 34px;
+  height: 34px;
+  border: 3px solid var(--surface-2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.drop-overlay {
+  pointer-events: none;
+}
+
+.drop-overlay-card {
+  border: 2px dashed var(--accent);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.drop-overlay-card .icon {
+  width: 44px;
+  height: 44px;
+  color: var(--accent);
+  stroke-width: 1.6;
+}

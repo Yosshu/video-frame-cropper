@@ -18,6 +18,22 @@ export const en: Record<MessageKey, string> = {
   'drop.formats': 'Supports MP4, MOV, WebM, MKV and more',
   'drop.privacy': 'Your video is never uploaded — it is processed entirely in your browser.',
 
+  'drop.release': 'Drop to open the video',
+
+  'busy.opening': 'Opening video…',
+  'busy.indexing': 'Counting frames… ({count})',
+
+  'meta.frames': '{count} frames',
+
+  'alert.close': 'Close',
+  'error.open.unsupported-format': 'Could not open the video. This file format is not supported.',
+  'error.open.no-video-track': 'Could not open the video. This file contains no video track.',
+  'error.open.unsupported-codec': 'Could not open the video. Your browser cannot decode its codec ({codec}).',
+  'error.open.unsupported-codec-unknown': 'Could not open the video. Your browser cannot decode its codec.',
+  'error.open.no-frames': 'Could not open the video. It contains no frames.',
+  'error.open.read-failed': 'Could not open the video. An error occurred while reading the file. ({detail})',
+  'error.decode': 'Could not load frame {frame}.',
+
   'footer.privacy': 'Your video is never uploaded. Everything runs locally in your browser.',
   'footer.source': 'Source code',
 };

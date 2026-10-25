@@ -55,7 +55,8 @@ export function onLangChange(listener: (lang: Lang) => void): () => void {
 /** Fills every element marked with `data-i18n*` attributes under `root`. */
 export function applyTranslations(root: ParentNode = document): void {
   for (const el of root.querySelectorAll<HTMLElement>('[data-i18n]')) {
-    el.textContent = t(el.dataset.i18n as MessageKey);
+    const params = el.dataset.i18nParams ? (JSON.parse(el.dataset.i18nParams) as MessageParams) : undefined;
+    el.textContent = t(el.dataset.i18n as MessageKey, params);
   }
   for (const el of root.querySelectorAll<HTMLElement>('[data-i18n-title]')) {
     el.title = t(el.dataset.i18nTitle as MessageKey);
@@ -66,6 +67,16 @@ export function applyTranslations(root: ParentNode = document): void {
   for (const el of root.querySelectorAll<HTMLElement>('[data-i18n-placeholder]')) {
     el.setAttribute('placeholder', t(el.dataset.i18nPlaceholder as MessageKey));
   }
+}
+
+/**
+ * Shows a translated message in `el` and keeps it translated when the language changes.
+ */
+export function localize(el: HTMLElement, key: MessageKey, params?: MessageParams): void {
+  el.dataset.i18n = key;
+  if (params) el.dataset.i18nParams = JSON.stringify(params);
+  else delete el.dataset.i18nParams;
+  el.textContent = t(key, params);
 }
 
 function readStoredLang(): string | null {

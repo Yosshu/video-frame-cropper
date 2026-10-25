@@ -20,6 +20,9 @@
       <symbol id="i-video" viewBox="0 0 24 24">
         <rect x="2.5" y="6" width="14" height="12" rx="2.5" /><path d="m16.5 10.5 5-3v9l-5-3" />
       </symbol>
+      <symbol id="i-x" viewBox="0 0 24 24">
+        <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+      </symbol>
       <symbol id="i-help" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="9.5" /><path d="M9.6 9.2a2.5 2.5 0 0 1 4.9.6c0 1.7-2.5 2.2-2.5 3.9" /><path d="M12 17.2h.01" />
       </symbol>
@@ -55,6 +58,13 @@
     </header>
 
     <main class="app-main">
+      <div class="alert" id="alert" role="alert" hidden>
+        <p class="alert-text" id="alert-text"></p>
+        <button type="button" class="alert-close" id="alert-close" data-i18n-aria-label="alert.close" data-i18n-title="alert.close">
+          <svg class="icon" aria-hidden="true"><use href="#i-x" /></svg>
+        </button>
+      </div>
+
       <section class="dropzone" id="dropzone">
         <svg class="dropzone-icon icon" aria-hidden="true"><use href="#i-video" /></svg>
         <p class="dropzone-title" data-i18n="drop.title">ここに動画をドロップ</p>
@@ -68,6 +78,15 @@
           動画はアップロードされず、お使いのブラウザの中だけで処理されます。
         </p>
       </section>
+      <section class="workspace" id="workspace" hidden>
+        <div class="video-meta" id="video-meta"></div>
+        <div class="viewer" id="viewer">
+          <div class="frame-box" id="frame-box">
+            <canvas class="frame-canvas" id="frame-canvas"></canvas>
+          </div>
+        </div>
+      </section>
+
       <input type="file" id="file-input" accept="video/*,.mp4,.m4v,.mov,.webm,.mkv,.ts,.avi,.wmv,.flv,.mpg,.mpeg" hidden />
     </main>
 
@@ -79,6 +98,21 @@
         >
       </p>
     </footer>
+
+    <div class="busy" id="busy" hidden>
+      <div class="busy-card" role="status" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <p class="busy-title" id="busy-title"></p>
+        <p class="busy-detail" id="busy-detail"></p>
+      </div>
+    </div>
+
+    <div class="drop-overlay" id="drop-overlay" hidden>
+      <div class="drop-overlay-card">
+        <svg class="icon" aria-hidden="true"><use href="#i-video" /></svg>
+        <span data-i18n="drop.release">ドロップして動画を開く</span>
+      </div>
+    </div>
 
     <noscript><p class="noscript">このアプリを使うには JavaScript を有効にしてください。 / Please enable JavaScript to use this app.</p></noscript>
     <script type="module" src="./src/main.ts"></script>

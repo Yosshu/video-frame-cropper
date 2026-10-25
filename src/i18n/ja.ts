@@ -18,6 +18,24 @@ export const ja = {
   'drop.formats': 'MP4・MOV・WebM・MKV などに対応',
   'drop.privacy': '動画はアップロードされず、お使いのブラウザの中だけで処理されます。',
 
+  'drop.release': 'ドロップして動画を開く',
+
+  'busy.opening': '動画を読み込んでいます…',
+  'busy.indexing': 'フレームを数えています…（{count}）',
+
+  'meta.frames': '{count} フレーム',
+
+  'alert.close': '閉じる',
+  'error.open.unsupported-format': '動画を開けませんでした。このファイル形式には対応していません。',
+  'error.open.no-video-track': '動画を開けませんでした。このファイルには映像が含まれていません。',
+  'error.open.unsupported-codec':
+    '動画を開けませんでした。この動画の圧縮形式（{codec}）は、お使いのブラウザでは読み込めません。',
+  'error.open.unsupported-codec-unknown':
+    '動画を開けませんでした。この動画の圧縮形式は、お使いのブラウザでは読み込めません。',
+  'error.open.no-frames': '動画を開けませんでした。この動画にはフレームがありません。',
+  'error.open.read-failed': '動画を開けませんでした。ファイルの読み込み中にエラーが発生しました。（{detail}）',
+  'error.decode': 'フレーム {frame} を読み込めませんでした。',
+
   'footer.privacy': '動画はアップロードされません。すべての処理はお使いのブラウザ内で行われます。',
   'footer.source': 'ソースコード',
 } satisfies Record<string, string>;
