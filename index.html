@@ -85,6 +85,12 @@
         <div class="viewer" id="viewer">
           <div class="frame-box" id="frame-box">
             <canvas class="frame-canvas" id="frame-canvas"></canvas>
+            <svg class="selection-overlay" id="selection-overlay" preserveAspectRatio="none" aria-hidden="true">
+              <path class="selection-shade" fill-rule="evenodd" />
+              <rect class="selection-halo" />
+              <rect class="selection-outline" />
+            </svg>
+            <span class="selection-label" id="selection-label" hidden></span>
             <span class="frame-spinner spinner" aria-hidden="true"></span>
           </div>
         </div>
@@ -107,6 +113,36 @@
             </label>
             <span class="frame-time" id="frame-time" data-i18n-title="nav.time"></span>
           </div>
+        </div>
+
+        <div class="selection-panel panel">
+          <div class="selection-fields">
+            <span class="panel-title" data-i18n="sel.title">切り抜き範囲</span>
+            <label class="field" data-i18n-title="sel.x1">
+              <span class="field-label">x1</span>
+              <input type="number" class="number-input coord-input" id="sel-x1" min="0" step="1" inputmode="numeric" />
+            </label>
+            <label class="field" data-i18n-title="sel.y1">
+              <span class="field-label">y1</span>
+              <input type="number" class="number-input coord-input" id="sel-y1" min="0" step="1" inputmode="numeric" />
+            </label>
+            <label class="field" data-i18n-title="sel.x2">
+              <span class="field-label">x2</span>
+              <input type="number" class="number-input coord-input" id="sel-x2" min="0" step="1" inputmode="numeric" />
+            </label>
+            <label class="field" data-i18n-title="sel.y2">
+              <span class="field-label">y2</span>
+              <input type="number" class="number-input coord-input" id="sel-y2" min="0" step="1" inputmode="numeric" />
+            </label>
+          </div>
+          <div class="selection-summary">
+            <span class="sel-size" id="sel-size"></span>
+            <button type="button" class="btn" id="sel-clear" data-i18n-title="sel.clearTooltip">
+              <svg class="icon" aria-hidden="true"><use href="#i-x" /></svg>
+              <span data-i18n="sel.clear">選択解除</span>
+            </button>
+          </div>
+          <p class="sel-hint" id="sel-hint" data-i18n="sel.hint">画像の上をドラッグすると範囲を選択できます。</p>
         </div>
       </section>
 

@@ -1,6 +1,8 @@
+import { fitRect, normalizeRect, type Rect } from './geometry';
 import { formatFps, formatTime } from './format';
 import { localize } from './i18n';
 import { AlertBanner, BusyOverlay } from './ui/overlays';
+import type { SelectionOverlay, SelectionPanel } from './ui/selection';
 import type { Timeline } from './ui/timeline';
 import { Viewer } from './ui/viewer';
 import { FrameScheduler } from './video/frame-scheduler';
@@ -13,6 +15,8 @@ export interface AppElements {
   meta: HTMLElement;
   viewer: Viewer;
   timeline: Timeline;
+  selectionOverlay: SelectionOverlay;
+  selectionPanel: SelectionPanel;
   alert: AlertBanner;
   busy: BusyOverlay;
 }
@@ -23,6 +27,8 @@ export class App {
   private readonly scheduler = new FrameScheduler((index) => this.loadFrame(index));
   /** The frame the user asked for; the canvas shows it once it has been decoded. */
   private index = 0;
+  /** Kept when moving between frames (and videos), so one region can be cut from many frames. */
+  private selection: Rect | null = null;
 
   constructor(private readonly ui: AppElements) {}
 
@@ -48,6 +54,20 @@ export class App {
 
   step(delta: number): void {
     this.goTo(this.index + delta);
+  }
+
+  setSelection(rect: Rect | null): void {
+    this.selection = rect;
+    this.ui.selectionOverlay.render(rect);
+    this.ui.selectionPanel.render(rect);
+  }
+
+  /** Applies typed coordinates. Returns false if they leave no area inside the frame. */
+  applySelectionInput(x1: number, y1: number, x2: number, y2: number): boolean {
+    if (!this.source) return false;
+    const rect = normalizeRect(x1, y1, x2, y2, this.source.info);
+    if (rect) this.setSelection(rect);
+    return rect !== null;
   }
 
   async open(file: File): Promise<void> {
@@ -91,6 +111,9 @@ export class App {
     const { info } = source;
     this.ui.viewer.setVideoSize(info.width, info.height);
     this.ui.timeline.setFrameCount(info.frameCount);
+    this.ui.selectionOverlay.setFrameSize(info);
+    this.ui.selectionPanel.setFrameSize(info);
+    this.setSelection(this.selection && fitRect(this.selection, info));
     this.renderMeta(source);
     this.ui.dropzone.hidden = true;
     this.ui.workspace.hidden = false;

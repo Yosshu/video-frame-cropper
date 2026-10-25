@@ -1,11 +1,12 @@
 import { App } from './app';
 import { getLang, initI18n, onLangChange, setLang, type Lang } from './i18n';
 import { AlertBanner, BusyOverlay } from './ui/overlays';
+import { SelectionOverlay, SelectionPanel } from './ui/selection';
 import { Timeline } from './ui/timeline';
 import { Viewer } from './ui/viewer';
 
-function byId<T extends HTMLElement>(id: string): T {
-  const el = document.getElementById(id);
+function byId<T extends Element = HTMLElement>(id: string): T {
+  const el: Element | null = document.getElementById(id);
   if (!el) throw new Error(`Missing element #${id}`);
   return el as T;
 }
@@ -92,6 +93,9 @@ function setupShortcuts(app: App): void {
       case 'End':
         app.goTo(app.lastIndex);
         break;
+      case 'Escape':
+        app.setSelection(null);
+        break;
       default:
         return;
     }
@@ -124,6 +128,21 @@ function main(): void {
     meta: byId('video-meta'),
     viewer: new Viewer(byId('viewer'), byId('frame-box'), byId<HTMLCanvasElement>('frame-canvas')),
     timeline,
+    selectionOverlay: new SelectionOverlay(byId<SVGSVGElement>('selection-overlay'), byId('selection-label'), (rect) =>
+      app?.setSelection(rect),
+    ),
+    selectionPanel: new SelectionPanel(
+      {
+        inputs: [byId('sel-x1'), byId('sel-y1'), byId('sel-x2'), byId('sel-y2')],
+        size: byId('sel-size'),
+        hint: byId('sel-hint'),
+        clear: byId('sel-clear'),
+      },
+      {
+        apply: (x1, y1, x2, y2) => app?.applySelectionInput(x1, y1, x2, y2) ?? false,
+        clear: () => app?.setSelection(null),
+      },
+    ),
     alert: new AlertBanner(byId('alert'), byId('alert-text'), byId('alert-close')),
     busy: new BusyOverlay(byId('busy'), byId('busy-title'), byId('busy-detail')),
   });

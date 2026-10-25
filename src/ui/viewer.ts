@@ -1,8 +1,8 @@
 import type { DecodedFrame } from '../video/types';
 
-/** Space kept below the viewer for the controls, so the frame and the controls fit on one screen. */
-const RESERVED_HEIGHT = 340;
 const MIN_HEIGHT = 240;
+/** Below this page width the viewer may use most of the screen height; the controls scroll into view. */
+const NARROW_WIDTH = 640;
 
 /**
  * Shows video frames at their full resolution in a canvas that is scaled to fit the page. The
@@ -55,13 +55,26 @@ export class Viewer {
     const style = getComputedStyle(this.container);
     const availableWidth =
       this.container.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
-    const availableHeight = Math.max(MIN_HEIGHT, window.innerHeight - RESERVED_HEIGHT);
     if (availableWidth <= 0) return;
+    const availableHeight =
+      window.innerWidth < NARROW_WIDTH
+        ? window.innerHeight * 0.7
+        : Math.max(MIN_HEIGHT, window.innerHeight - this.heightAroundFrame());
 
     this.displayScale = Math.min(availableWidth / this.videoWidth, availableHeight / this.videoHeight);
     this.box.style.width = `${Math.round(this.videoWidth * this.displayScale)}px`;
     this.box.style.height = `${Math.round(this.videoHeight * this.displayScale)}px`;
     // Enlarged small videos show crisp pixels, which helps when selecting precisely.
     this.canvas.classList.toggle('pixelated', this.displayScale >= 2);
+  }
+
+  /** Height of everything above and below the frame, so the frame and all controls fit on screen. */
+  private heightAroundFrame(): number {
+    const workspace = this.container.parentElement;
+    const main = workspace?.parentElement;
+    if (!workspace || !main) return 0;
+    const top = workspace.getBoundingClientRect().top + window.scrollY;
+    const mainPaddingBottom = parseFloat(getComputedStyle(main).paddingBottom);
+    return top + workspace.offsetHeight - this.box.offsetHeight + mainPaddingBottom;
   }
 }

@@ -32,6 +32,17 @@ export const ja = {
   'nav.frameTooltip': 'フレーム番号（0 から数えます）。入力して Enter で移動します。',
   'nav.time': '先頭からの時間',
 
+  'sel.title': '切り抜き範囲',
+  'sel.x1': '左端の位置（ピクセル）',
+  'sel.y1': '上端の位置（ピクセル）',
+  'sel.x2': '右端の位置（ピクセル）。この列は含みません',
+  'sel.y2': '下端の位置（ピクセル）。この行は含みません',
+  'sel.size': '{width} × {height} px',
+  'sel.none': '未選択（フレーム全体）',
+  'sel.hint': '画像の上をドラッグすると範囲を選択できます。座標を入力して Enter でも指定できます。',
+  'sel.clear': '選択解除',
+  'sel.clearTooltip': '選択を解除する（Esc キー）',
+
   'alert.close': '閉じる',
   'error.open.unsupported-format': '動画を開けませんでした。このファイル形式には対応していません。',
   'error.open.no-video-track': '動画を開けませんでした。このファイルには映像が含まれていません。',

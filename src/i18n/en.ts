@@ -32,6 +32,17 @@ export const en: Record<MessageKey, string> = {
   'nav.frameTooltip': 'Frame number (counted from 0). Type a number and press Enter to jump.',
   'nav.time': 'Time from the start',
 
+  'sel.title': 'Crop region',
+  'sel.x1': 'Left edge (pixels)',
+  'sel.y1': 'Top edge (pixels)',
+  'sel.x2': 'Right edge (pixels), not included',
+  'sel.y2': 'Bottom edge (pixels), not included',
+  'sel.size': '{width} × {height} px',
+  'sel.none': 'None (whole frame)',
+  'sel.hint': 'Drag on the image to select a region, or type coordinates and press Enter.',
+  'sel.clear': 'Clear selection',
+  'sel.clearTooltip': 'Clear the selection (Esc key)',
+
   'alert.close': 'Close',
   'error.open.unsupported-format': 'Could not open the video. This file format is not supported.',
   'error.open.no-video-track': 'Could not open the video. This file contains no video track.',
