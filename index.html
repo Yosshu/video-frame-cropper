@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="ja" class="booting">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Video Frame Cropper</title>
+    <meta name="description" content="" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <svg class="icon-sprite" aria-hidden="true">
+      <symbol id="i-crop" viewBox="0 0 24 24">
+        <path d="M6 2v14a2 2 0 0 0 2 2h14" /><path d="M18 22V8a2 2 0 0 0-2-2H2" />
+      </symbol>
+      <symbol id="i-folder" viewBox="0 0 24 24">
+        <path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H9l2 2h7.5A2.5 2.5 0 0 1 21 9.5v7a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 16.5z" />
+      </symbol>
+      <symbol id="i-video" viewBox="0 0 24 24">
+        <rect x="2.5" y="6" width="14" height="12" rx="2.5" /><path d="m16.5 10.5 5-3v9l-5-3" />
+      </symbol>
+      <symbol id="i-x" viewBox="0 0 24 24">
+        <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+      </symbol>
+      <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" /></symbol>
+      <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24">
+        <path d="M12 3.5v11.5" /><path d="m7 10.5 5 5 5-5" /><path d="M4.5 20h15" />
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" /></symbol>
+      <symbol id="i-help" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9.5" /><path d="M9.6 9.2a2.5 2.5 0 0 1 4.9.6c0 1.7-2.5 2.2-2.5 3.9" /><path d="M12 17.2h.01" />
+      </symbol>
+    </svg>
+
+    <header class="app-header">
+      <div class="brand">
+        <svg class="brand-mark icon" aria-hidden="true"><use href="#i-crop" /></svg>
+        <div class="brand-text">
+          <h1 class="brand-name">Video Frame Cropper</h1>
+          <p class="brand-sub" data-i18n="app.subtitle">動画フレーム切り出しツール</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="btn" id="open-button" data-i18n-title="header.openTooltip">
+          <svg class="icon" aria-hidden="true"><use href="#i-folder" /></svg>
+          <span data-i18n="header.open">動画を開く</span>
+        </button>
+        <button
+          type="button"
+          class="btn btn-icon"
+          id="help-button"
+          data-i18n-title="header.help"
+          data-i18n-aria-label="header.help"
+        >
+          <svg class="icon" aria-hidden="true"><use href="#i-help" /></svg>
+        </button>
+        <div class="lang-switch" role="group" data-i18n-aria-label="header.language">
+          <button type="button" data-lang="ja" lang="ja">日本語</button>
+          <button type="button" data-lang="en" lang="en">English</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <div class="alert" id="alert" role="alert" hidden>
+        <p class="alert-text" id="alert-text"></p>
+        <button type="button" class="alert-close" id="alert-close" data-i18n-aria-label="alert.close" data-i18n-title="alert.close">
+          <svg class="icon" aria-hidden="true"><use href="#i-x" /></svg>
+        </button>
+      </div>
+
+      <section class="dropzone" id="dropzone">
+        <svg class="dropzone-icon icon" aria-hidden="true"><use href="#i-video" /></svg>
+        <p class="dropzone-title" data-i18n="drop.title">ここに動画をドロップ</p>
+        <p class="dropzone-title dropzone-title-touch" data-i18n="drop.titleTouch">動画を選んでください</p>
+        <p class="dropzone-or" data-i18n="drop.or">または</p>
+        <button type="button" class="btn btn-primary" id="choose-button">
+          <svg class="icon" aria-hidden="true"><use href="#i-folder" /></svg>
+          <span data-i18n="drop.choose">ファイルを選択</span>
+        </button>
+        <p class="dropzone-formats" data-i18n="drop.formats">MP4・MOV・WebM・MKV・AVI などに対応</p>
+        <p class="dropzone-privacy" data-i18n="drop.privacy">
+          動画はアップロードされず、お使いのブラウザの中だけで処理されます。
+        </p>
+      </section>
+      <section class="workspace" id="workspace" hidden>
+        <div class="video-meta" id="video-meta"></div>
+        <div class="viewer" id="viewer">
+          <div class="frame-box" id="frame-box">
+            <canvas class="frame-canvas" id="frame-canvas"></canvas>
+            <svg class="selection-overlay" id="selection-overlay" preserveAspectRatio="none" aria-hidden="true">
+              <path class="selection-shade" fill-rule="evenodd" />
+              <rect class="selection-halo" />
+              <rect class="selection-outline" />
+            </svg>
+            <span class="selection-label" id="selection-label" hidden></span>
+            <span class="frame-spinner spinner" aria-hidden="true"></span>
+          </div>
+        </div>
+
+        <div class="timeline panel">
+          <div class="timeline-track">
+            <button type="button" class="btn btn-icon" id="prev-frame" data-i18n-title="nav.prev" data-i18n-aria-label="nav.prev">
+              <svg class="icon" aria-hidden="true"><use href="#i-chevron-left" /></svg>
+            </button>
+            <input type="range" class="frame-slider" id="frame-slider" min="0" max="0" step="1" value="0" data-i18n-aria-label="nav.slider" />
+            <button type="button" class="btn btn-icon" id="next-frame" data-i18n-title="nav.next" data-i18n-aria-label="nav.next">
+              <svg class="icon" aria-hidden="true"><use href="#i-chevron-right" /></svg>
+            </button>
+          </div>
+          <div class="timeline-position">
+            <label class="field" data-i18n-title="nav.frameTooltip">
+              <span class="field-label" data-i18n="nav.frame">フレーム</span>
+              <input type="number" class="number-input frame-input" id="frame-input" min="0" step="1" inputmode="numeric" />
+              <span class="frame-total" id="frame-total"></span>
+            </label>
+            <span class="frame-time" id="frame-time" data-i18n-title="nav.time"></span>
+          </div>
+        </div>
+
+        <div class="selection-panel panel">
+          <div class="selection-fields">
+            <span class="panel-title" data-i18n="sel.title">切り抜き範囲</span>
+            <label class="field" data-i18n-title="sel.x1">
+              <span class="field-label">x1</span>
+              <input type="number" class="number-input coord-input" id="sel-x1" min="0" step="1" inputmode="numeric" />
+            </label>
+            <label class="field" data-i18n-title="sel.y1">
+              <span class="field-label">y1</span>
+              <input type="number" class="number-input coord-input" id="sel-y1" min="0" step="1" inputmode="numeric" />
+            </label>
+            <label class="field" data-i18n-title="sel.x2">
+              <span class="field-label">x2</span>
+              <input type="number" class="number-input coord-input" id="sel-x2" min="0" step="1" inputmode="numeric" />
+            </label>
+            <label class="field" data-i18n-title="sel.y2">
+              <span class="field-label">y2</span>
+              <input type="number" class="number-input coord-input" id="sel-y2" min="0" step="1" inputmode="numeric" />
+            </label>
+          </div>
+          <div class="selection-summary">
+            <span class="sel-size" id="sel-size"></span>
+            <button type="button" class="btn" id="sel-clear" data-i18n-title="sel.clearTooltip">
+              <svg class="icon" aria-hidden="true"><use href="#i-x" /></svg>
+              <span data-i18n="sel.clear">選択解除</span>
+            </button>
+          </div>
+          <p class="sel-hint" id="sel-hint" data-i18n="sel.hint">画像の上をドラッグすると範囲を選択できます。</p>
+        </div>
+
+        <div class="save-panel panel">
+          <div class="save-options">
+            <label class="field">
+              <span class="field-label" data-i18n="save.format">形式</span>
+              <select class="select" id="save-format">
+                <option value="jpeg">JPEG</option>
+                <option value="png">PNG</option>
+                <option value="webp">WebP</option>
+              </select>
+            </label>
+            <label class="field" id="save-quality-field" data-i18n-title="save.qualityTooltip">
+              <span class="field-label" data-i18n="save.quality">画質</span>
+              <input type="number" class="number-input quality-input" id="save-quality" min="1" max="100" step="1" inputmode="numeric" />
+            </label>
+          </div>
+          <p class="save-name" id="save-name"></p>
+          <button type="button" class="btn btn-primary btn-save" id="save-button" data-i18n-title="save.tooltip">
+            <svg class="icon" aria-hidden="true"><use href="#i-download" /></svg>
+            <span data-i18n="save.label">保存</span>
+          </button>
+        </div>
+      </section>
+
+      <input type="file" id="file-input" accept="video/*,.mp4,.m4v,.mov,.webm,.mkv,.ts,.avi,.wmv,.flv,.mpg,.mpeg" hidden />
+    </main>
+
+    <footer class="app-footer">
+      <p data-i18n="footer.privacy">動画はアップロードされません。すべての処理はお使いのブラウザ内で行われます。</p>
+      <p>
+        <a href="https://github.com/Yosshu/video-frame-cropper" target="_blank" rel="noopener" data-i18n="footer.source"
+          >ソースコード</a
+        >
+        ·
+        <a href="./third-party-licenses.txt" target="_blank" rel="noopener" data-i18n="footer.licenses">ライセンス</a>
+      </p>
+    </footer>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden>
+      <svg class="icon" aria-hidden="true"><use href="#i-check" /></svg>
+      <span id="toast-text"></span>
+    </div>
+
+    <dialog class="help-dialog" id="help-dialog" aria-labelledby="help-title">
+      <div class="dialog-header">
+        <h2 id="help-title" data-i18n="help.title">使い方</h2>
+        <button type="button" class="alert-close" id="help-close" data-i18n-aria-label="alert.close" data-i18n-title="alert.close">
+          <svg class="icon" aria-hidden="true"><use href="#i-x" /></svg>
+        </button>
+      </div>
+      <ol class="help-steps">
+        <li data-i18n="help.step1"></li>
+        <li data-i18n="help.step2"></li>
+        <li data-i18n="help.step3"></li>
+        <li data-i18n="help.step4"></li>
+      </ol>
+      <p class="help-tip" data-i18n="help.tip"></p>
+      <h3 data-i18n="help.shortcuts">キーボードショートカット</h3>
+      <table class="shortcut-table">
+        <tbody>
+          <tr><td><kbd>S</kbd> / <kbd>T</kbd></td><td data-i18n="help.keySave"></td></tr>
+          <tr><td><kbd>O</kbd></td><td data-i18n="help.keyOpen"></td></tr>
+          <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td data-i18n="help.keyStep"></td></tr>
+          <tr><td><kbd>Shift</kbd> + <kbd>←</kbd> <kbd>→</kbd></td><td data-i18n="help.keyStep10"></td></tr>
+          <tr><td><kbd>Home</kbd> / <kbd>End</kbd></td><td data-i18n="help.keyEnds"></td></tr>
+          <tr><td><kbd>Esc</kbd></td><td data-i18n="help.keyClear"></td></tr>
+        </tbody>
+      </table>
+      <h3 data-i18n="help.fileNames">保存されるファイル名</h3>
+      <p data-i18n="help.fileNamesText"></p>
+      <p><code>運動会_f0120_x100_y50_x740_y530.jpg</code></p>
+      <h3 data-i18n="help.formats">対応している動画</h3>
+      <p data-i18n="help.formatsText"></p>
+      <p class="help-privacy" data-i18n="help.privacy"></p>
+    </dialog>
+
+    <div class="busy" id="busy" hidden>
+      <div class="busy-card" role="status" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <p class="busy-title" id="busy-title"></p>
+        <p class="busy-detail" id="busy-detail"></p>
+      </div>
+    </div>
+
+    <div class="drop-overlay" id="drop-overlay" hidden>
+      <div class="drop-overlay-card">
+        <svg class="icon" aria-hidden="true"><use href="#i-video" /></svg>
+        <span data-i18n="drop.release">ドロップして動画を開く</span>
+      </div>
+    </div>
+
+    <noscript><p class="noscript">このアプリを使うには JavaScript を有効にしてください。 / Please enable JavaScript to use this app.</p></noscript>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
