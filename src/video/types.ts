@@ -12,6 +12,8 @@ export interface VideoInfo {
   duration: number;
   /** Human-readable codec name such as "H.264", or null when unknown. */
   codec: string | null;
+  /** WebCodecs (fast, the browser's decoders) or ffmpeg.wasm (compatibility fallback). */
+  engine: 'webcodecs' | 'ffmpeg';
 }
 
 /** A decoded frame. It holds decoder memory until it is closed. */
@@ -44,7 +46,7 @@ export class VideoOpenError extends Error {
 }
 
 export interface OpenProgress {
-  phase: 'reading' | 'indexing';
+  phase: 'loading-engine' | 'reading' | 'indexing';
   /** Frames counted so far while indexing. */
   frames?: number;
 }

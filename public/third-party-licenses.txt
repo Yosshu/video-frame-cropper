@@ -1,0 +1,21 @@
+Video Frame Cropper — third-party software
+==========================================
+
+This web app includes the following software. Each component is distributed under its own
+license; the license texts are available at the links below.
+
+Mediabunny 1.x
+  License: Mozilla Public License 2.0 (https://www.mozilla.org/en-US/MPL/2.0/)
+  Source:  https://github.com/Vanilagy/mediabunny
+  Used to read video files (MP4, MOV, WebM, MKV, MPEG-TS) in the browser.
+
+@ffmpeg/ffmpeg 0.12.15 (ffmpeg.wasm)
+  License: MIT (https://github.com/ffmpegwasm/ffmpeg.wasm/blob/main/LICENSE)
+  Source:  https://github.com/ffmpegwasm/ffmpeg.wasm
+
+@ffmpeg/core 0.12.10 (FFmpeg compiled to WebAssembly)
+  License: GNU General Public License v2.0 or later (https://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
+  Source:  https://github.com/ffmpegwasm/ffmpeg.wasm (build scripts and library versions)
+           https://ffmpeg.org/download.html (FFmpeg source code)
+  Loaded only in "compatibility mode", for videos the browser cannot decode by itself.
+  FFmpeg is a trademark of Fabrice Bellard, originator of the FFmpeg project.

@@ -6,6 +6,7 @@ import { expect, test, type Page } from '@playwright/test';
 const fixtures = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'fixtures');
 const H264 = path.join(fixtures, 'frames-h264.mp4'); // 150 frames, 320×180, B-frames, GOP 60
 const VP9 = path.join(fixtures, 'frames-vp9.webm'); // 100 frames, 320×180
+const AVI = path.join(fixtures, 'frames-mpeg4.avi'); // 90 frames, 320×180, MPEG-4 Part 2 with B-frames
 
 /**
  * The fixtures show their frame number as 8 vertical stripes (bit 0 on the left, white = 1).
@@ -208,4 +209,53 @@ test('explains when a file cannot be opened', async ({ page }) => {
   await expect(page.locator('#alert')).toBeVisible();
   await expect(page.locator('#alert-text')).toContainText('動画を開けませんでした');
   await expect(page.locator('#dropzone')).toBeVisible();
+});
+
+test.describe('compatibility mode (ffmpeg.wasm)', () => {
+  // Loading and compiling the 30 MB WebAssembly engine takes a while on CI machines.
+  test.slow();
+
+  test('opens AVI files and still shows exact frames', async ({ page }) => {
+    await openVideo(page, AVI);
+    await expect(page.locator('.meta-badge')).toHaveText('互換モード');
+    await expect(page.locator('#video-meta')).toContainText('90 フレーム');
+    await expect(page.locator('#video-meta')).toContainText('MPEG-4 Part 2');
+    await expectShownFrame(page, 0);
+
+    for (const step of [1, 2, 3]) {
+      await page.keyboard.press('ArrowRight');
+      await expectShownFrame(page, step);
+    }
+    await goToFrame(page, 45);
+    await expectShownFrame(page, 45);
+    for (let frame = 44; frame >= 40; frame--) {
+      await page.keyboard.press('ArrowLeft');
+      await expectShownFrame(page, frame);
+    }
+    await page.keyboard.press('End');
+    await expectShownFrame(page, 89);
+
+    await page.selectOption('#save-format', 'png');
+    const [download] = await Promise.all([page.waitForEvent('download'), page.keyboard.press('s')]);
+    expect(download.suggestedFilename()).toBe('frames-mpeg4_f89.png');
+    const bytes = await readFile(await download.path());
+    expect(await decodeFrameNumber(page, { dataUrl: `data:image/png;base64,${bytes.toString('base64')}` })).toBe(89);
+  });
+
+  test('is used when the browser has no WebCodecs', async ({ page }) => {
+    await page.addInitScript(() => {
+      // Like Firefox for Android: no WebCodecs at all.
+      const scope = window as unknown as Record<string, unknown>;
+      for (const name of ['VideoDecoder', 'VideoEncoder', 'VideoFrame', 'EncodedVideoChunk']) delete scope[name];
+    });
+    await openVideo(page, H264);
+    await expect(page.locator('.meta-badge')).toBeVisible();
+    await expectShownFrame(page, 0);
+    await goToFrame(page, 121);
+    await expectShownFrame(page, 121);
+    await page.keyboard.press('ArrowLeft');
+    await expectShownFrame(page, 120);
+    await page.keyboard.press('ArrowLeft');
+    await expectShownFrame(page, 119);
+  });
 });

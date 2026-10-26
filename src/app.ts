@@ -1,7 +1,7 @@
 import { downloadBlob, encodeCrop, outputFileName } from './export';
 import { fitRect, normalizeRect, type Rect } from './geometry';
 import { formatFps, formatTime } from './format';
-import { localize } from './i18n';
+import { localize, t } from './i18n';
 import { AlertBanner, BusyOverlay, Toast } from './ui/overlays';
 import type { SavePanel } from './ui/save-panel';
 import type { SelectionOverlay, SelectionPanel } from './ui/selection';
@@ -131,8 +131,11 @@ export class App {
       const source = await openVideo(
         file,
         (progress) => {
-          if (progress.phase === 'indexing' && !loading.signal.aborted) {
-            this.ui.busy.show('busy.indexing', { count: progress.frames ?? 0 }, file.name);
+          if (loading.signal.aborted) return;
+          if (progress.phase === 'loading-engine') this.ui.busy.show('busy.loadingEngine', undefined, file.name);
+          if (progress.phase === 'indexing') {
+            if (progress.frames === undefined) this.ui.busy.show('busy.indexingStarted', undefined, file.name);
+            else this.ui.busy.show('busy.indexing', { count: progress.frames }, file.name);
           }
         },
         loading.signal,
@@ -218,6 +221,13 @@ export class App {
     localize(addItem(), 'meta.frames', { count: info.frameCount });
     addItem(formatTime(info.duration));
     if (info.codec) addItem(info.codec);
+    if (info.engine === 'ffmpeg') {
+      const badge = addItem();
+      badge.classList.add('meta-badge');
+      localize(badge, 'meta.ffmpeg');
+      badge.dataset.i18nTitle = 'meta.ffmpegTooltip';
+      badge.title = t('meta.ffmpegTooltip');
+    }
   }
 
   private showOpenError(error: unknown): void {

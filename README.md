@@ -45,9 +45,10 @@
 
 ### 対応している動画
 
-- 形式：MP4・MOV・M4V・WebM・MKV・TS
-- 圧縮形式：H.264・H.265/HEVC・VP8・VP9・AV1（どれを読めるかはブラウザによって異なります）
+- **MP4・MOV・M4V・WebM・MKV・TS**：ブラウザ内蔵の機能（WebCodecs）で高速に読み込みます。圧縮形式は H.264・H.265/HEVC・VP8・VP9・AV1（どれを読めるかはブラウザによって異なります）。
+- **AVI・WMV・FLV・MPG など**、またはブラウザが読めない圧縮形式（ProRes、環境によっては HEVC など）：自動的に**互換モード**（ffmpeg の WebAssembly 版）で読み込みます。初回だけ約 30 MB のダウンロードがあり、フレームの表示も少し遅くなります。WebCodecs のないブラウザ（Android 版 Firefox など）でも互換モードで動きます。
 - 推奨ブラウザ：最新の Chrome・Edge・Safari・Firefox（パソコン）
+- 色について：ブラウザは色空間の情報が書かれていない HD 動画を BT.709 として解釈するため、OpenCV（BT.601 として解釈）で切り出した画像とは色がわずかに異なることがあります。フレームの番号と切り抜く位置は OpenCV と一致することを確認しています。
 
 ## 開発
 
@@ -59,7 +60,7 @@ npm run test:e2e    # ブラウザでの通しテスト（Playwright）
 npm run build       # dist/ に公開用ファイルを出力
 ```
 
-- Vite + TypeScript（フレームワークなし）。動画の読み込みに [Mediabunny](https://mediabunny.dev/)、デコードにブラウザの WebCodecs を使っています。
+- Vite + TypeScript（フレームワークなし）。動画の読み込みに [Mediabunny](https://mediabunny.dev/)、デコードにブラウザの WebCodecs、互換モードに [ffmpeg.wasm](https://github.com/ffmpegwasm/ffmpeg.wasm) を使っています。
 - `main` ブランチと `claude/*` ブランチへの push で、GitHub Actions が GitHub Pages に自動公開します。
 - テスト用の動画（`tests/fixtures`）は `npm run fixtures` で作り直せます（ffmpeg が必要）。各フレームに自分のフレーム番号が白黒の縞として描かれていて、表示・保存された画像が正しいフレームかをテストで確かめています。
 
@@ -97,7 +98,11 @@ npm run build       # dist/ に公開用ファイルを出力
 
 Saved images are named `<video>_f<frame>_x<x1>_y<y1>_x<x2>_y<y2>.<ext>` (or `<video>_f<frame>.<ext>` without a selection). Frame numbers start at 0 and are zero-padded; coordinates are in video pixels, and the `x2` column / `y2` row are not included.
 
-Supported: MP4, MOV, M4V, WebM, MKV and TS files with H.264, H.265/HEVC, VP8, VP9 or AV1 video (codec support depends on the browser). Recommended: current desktop Chrome, Edge, Safari or Firefox.
+Supported videos:
+
+- **MP4, MOV, M4V, WebM, MKV, TS** are read with the browser's own decoders (WebCodecs): H.264, H.265/HEVC, VP8, VP9, AV1 (support depends on the browser).
+- **AVI, WMV, FLV, MPG** and videos with codecs the browser cannot decode (ProRes, HEVC in some browsers, …) open automatically in **compatibility mode** (ffmpeg compiled to WebAssembly). It downloads about 30 MB the first time and shows frames a little more slowly. Browsers without WebCodecs (such as Firefox for Android) use it too.
+- Recommended: current desktop Chrome, Edge, Safari or Firefox.
 
 ### Development
 
@@ -109,4 +114,15 @@ npm run test:e2e    # end-to-end tests (Playwright)
 npm run build       # production build in dist/
 ```
 
-Built with Vite and TypeScript (no framework), [Mediabunny](https://mediabunny.dev/) for reading media files and the browser's WebCodecs API for decoding. Pushes to `main` and `claude/*` branches are deployed to GitHub Pages by GitHub Actions.
+Built with Vite and TypeScript (no framework), [Mediabunny](https://mediabunny.dev/) for reading media files, the browser's WebCodecs API for decoding and [ffmpeg.wasm](https://github.com/ffmpegwasm/ffmpeg.wasm) for compatibility mode. Pushes to `main` and `claude/*` branches are deployed to GitHub Pages by GitHub Actions.
+
+## Third-party software
+
+| Component | License | Source |
+| --- | --- | --- |
+| [Mediabunny](https://mediabunny.dev/) | MPL-2.0 | https://github.com/Vanilagy/mediabunny |
+| @ffmpeg/ffmpeg (ffmpeg.wasm) | MIT | https://github.com/ffmpegwasm/ffmpeg.wasm |
+| @ffmpeg/core (FFmpeg compiled to WebAssembly) | GPL-2.0-or-later | https://github.com/ffmpegwasm/ffmpeg.wasm, https://ffmpeg.org/download.html |
+
+The FFmpeg core is only downloaded in compatibility mode. The same list ships with the site as [`third-party-licenses.txt`](public/third-party-licenses.txt).
+本アプリが含むサードパーティ ソフトウェアとそのライセンスは上の表のとおりです（サイトにも `third-party-licenses.txt` として同梱しています）。

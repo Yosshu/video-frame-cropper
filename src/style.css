@@ -423,6 +423,19 @@ body {
   opacity: 0.6;
 }
 
+.meta-badge {
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+  cursor: help;
+}
+
+.meta-badge::before {
+  display: none !important;
+}
+
 .viewer {
   display: flex;
   justify-content: center;

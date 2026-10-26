@@ -245,6 +245,7 @@ export async function openWithMediabunny(
       variableFrameRate: table.isVariableRate,
       duration: table.duration,
       codec: codecName,
+      engine: 'webcodecs',
     };
     return new MediabunnySource(info, input, table, new VideoSampleSink(track), packetSink);
   } catch (error) {

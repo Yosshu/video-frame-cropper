@@ -15,7 +15,7 @@ export const ja = {
   'drop.title': 'ここに動画をドロップ',
   'drop.or': 'または',
   'drop.choose': 'ファイルを選択',
-  'drop.formats': 'MP4・MOV・WebM・MKV などに対応',
+  'drop.formats': 'MP4・MOV・WebM・MKV・AVI などに対応',
   'drop.privacy': '動画はアップロードされず、お使いのブラウザの中だけで処理されます。',
 
   'drop.release': 'ドロップして動画を開く',
@@ -70,10 +70,15 @@ export const ja = {
     '「動画名_f〈フレーム番号〉_x〈左〉_y〈上〉_x〈右〉_y〈下〉」の形式です。範囲を選ばなかった場合は「動画名_f〈フレーム番号〉」になります。フレーム番号は、ファイルが番号順に並ぶよう 0 で桁をそろえます。',
   'help.formats': '対応している動画',
   'help.formatsText':
-    'MP4・MOV・WebM・MKV・TS（H.264・H.265/HEVC・VP8・VP9・AV1）。どの圧縮形式を読めるかは、お使いのブラウザによって異なります。',
+    'MP4・MOV・WebM・MKV・TS は、ブラウザ内蔵の機能で高速に読み込みます（H.264・H.265/HEVC・VP8・VP9・AV1。どれを読めるかはブラウザによって異なります）。AVI・WMV・FLV・MPG などや、ブラウザが読めない圧縮形式の動画は、自動的に「互換モード」（ffmpeg の WebAssembly 版）で読み込みます。互換モードは初回だけ約 30 MB のダウンロードがあり、フレームの表示も少し遅くなります。',
   'help.privacy': '動画はどこにもアップロードされません。読み込みも切り抜きも、すべてお使いのブラウザの中で行われます。',
   'meta.variableFps': '平均 {fps} fps（可変フレームレート）',
   'drop.titleTouch': '動画を選んでください',
+  'busy.loadingEngine': '互換モードの読み込みエンジンを準備しています…（初回のみ約 30 MB）',
+  'busy.indexingStarted': 'フレームを数えています…',
+  'meta.ffmpeg': '互換モード',
+  'meta.ffmpegTooltip':
+    'この動画はブラウザ内蔵の機能では読めないため、ffmpeg（WebAssembly 版）で読み込んでいます。フレームの表示に少し時間がかかります。',
 
   'alert.close': '閉じる',
   'error.open.unsupported-format': '動画を開けませんでした。このファイル形式には対応していません。',
@@ -90,6 +95,7 @@ export const ja = {
 
   'footer.privacy': '動画はアップロードされません。すべての処理はお使いのブラウザ内で行われます。',
   'footer.source': 'ソースコード',
+  'footer.licenses': 'ライセンス',
 } satisfies Record<string, string>;
 
 export type MessageKey = keyof typeof ja;

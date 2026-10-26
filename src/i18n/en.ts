@@ -15,7 +15,7 @@ export const en: Record<MessageKey, string> = {
   'drop.title': 'Drop a video here',
   'drop.or': 'or',
   'drop.choose': 'Choose a file',
-  'drop.formats': 'Supports MP4, MOV, WebM, MKV and more',
+  'drop.formats': 'Supports MP4, MOV, WebM, MKV, AVI and more',
   'drop.privacy': 'Your video is never uploaded — it is processed entirely in your browser.',
 
   'drop.release': 'Drop to open the video',
@@ -70,10 +70,15 @@ export const en: Record<MessageKey, string> = {
     'Images are named “video name_f<frame>_x<left>_y<top>_x<right>_y<bottom>”, or “video name_f<frame>” without a selection. Frame numbers are zero-padded so the files sort in order.',
   'help.formats': 'Supported videos',
   'help.formatsText':
-    'MP4, MOV, WebM, MKV and TS (H.264, H.265/HEVC, VP8, VP9, AV1). Which codecs can be read depends on your browser.',
+    'MP4, MOV, WebM, MKV and TS are read quickly with the browser’s own decoders (H.264, H.265/HEVC, VP8, VP9, AV1 — which ones work depends on the browser). AVI, WMV, FLV, MPG and videos with codecs the browser cannot decode are opened automatically in “compatibility mode” (ffmpeg compiled to WebAssembly), which downloads about 30 MB the first time and shows frames a little more slowly.',
   'help.privacy': 'Your video is never uploaded. Opening and cropping both happen entirely in your browser.',
   'meta.variableFps': '{fps} fps on average (variable frame rate)',
   'drop.titleTouch': 'Choose a video',
+  'busy.loadingEngine': 'Preparing the compatibility engine… (about 30 MB, first time only)',
+  'busy.indexingStarted': 'Counting frames…',
+  'meta.ffmpeg': 'Compatibility mode',
+  'meta.ffmpegTooltip':
+    'Your browser cannot decode this video by itself, so it is read with ffmpeg (WebAssembly). Showing frames takes a little longer.',
 
   'alert.close': 'Close',
   'error.open.unsupported-format': 'Could not open the video. This file format is not supported.',
@@ -88,4 +93,5 @@ export const en: Record<MessageKey, string> = {
 
   'footer.privacy': 'Your video is never uploaded. Everything runs locally in your browser.',
   'footer.source': 'Source code',
+  'footer.licenses': 'Licenses',
 };

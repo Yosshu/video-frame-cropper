@@ -17,4 +17,10 @@ ffmpeg -hide_banner -loglevel error -y -f lavfi -i "color=black:size=320x180:rat
   -vf "$pattern" -c:v libvpx-vp9 -b:v 200k -g 50 -deadline realtime -cpu-used 8 -pix_fmt yuv420p \
   frames-vp9.webm
 
-ls -l frames-h264.mp4 frames-vp9.webm
+# MPEG-4 Part 2 with B-frames in AVI, which browsers cannot read (the ffmpeg.wasm fallback opens it):
+# 90 frames at 30 fps. AVI stores no presentation times for these, which makes it the hardest case.
+ffmpeg -hide_banner -loglevel error -y -f lavfi -i "color=black:size=320x180:rate=30:duration=3" \
+  -vf "$pattern" -c:v mpeg4 -q:v 3 -g 30 -bf 2 -pix_fmt yuv420p \
+  frames-mpeg4.avi
+
+ls -l frames-h264.mp4 frames-vp9.webm frames-mpeg4.avi

@@ -6,6 +6,13 @@ export default defineConfig({
   build: {
     target: 'es2022',
   },
+  // ffmpeg.wasm starts a module worker that imports its core dynamically.
+  worker: {
+    format: 'es',
+  },
+  optimizeDeps: {
+    exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util'],
+  },
   test: {
     include: ['tests/**/*.test.ts'],
     environment: 'node',
