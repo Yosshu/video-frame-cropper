@@ -181,7 +181,8 @@ class FFmpegSource implements FrameSource {
     }
 
     const times = parseShowinfoTimes(log);
-    if (from === 0 && times[0] !== undefined) this.timeOffset ??= times[0] - this.table.timestamp(0);
+    // Without timestamps the offset is assumed to be zero, so the first frames are not extracted again.
+    if (from === 0) this.timeOffset ??= times[0] !== undefined ? times[0] - this.table.timestamp(0) : 0;
     for (let i = 0; ; i++) {
       const name = `${prefix}${String(i).padStart(3, '0')}.pam`;
       let data: Uint8Array | string;
